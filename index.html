@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Baccarat</title>
+<style>
+:root {
+--card: #ffffff;
+--border: #d8deea;
+--text: #1f2937;
+--muted: #6b7280;
+--player-bg: #eef5ff;
+--player-border: #93c5fd;
+--banker-bg: #fff1f2;
+--banker-border: #fda4af;
+--active: #fff7cc;
+--active-border: #f59e0b;
+--win-player: #2563eb;
+--win-banker: #dc2626;
+--win-tie: #059669;
+--soft-btn: #eef2f7;
+--soft-btn-border: #cbd5e1;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+margin: 0;
+min-height: 100%;
+font-family: Arial, "Microsoft JhengHei", sans-serif;
+background: #000000;
+color: var(--text);
+}
+
+.container {
+max-width: 920px;
+margin: 0 auto;
+padding: 12px;
+}
+
+.panel {
+background: transparent;
+border: none;
+box-shadow: none;
+padding: 0;
+}
+
+.top-box {
+display: flex;
+gap: 12px;
+}
+
+.side {
+flex: 1;
+border-radius: 16px;
+padding: 12px;
+border: 2px solid transparent;
+}
+
+.player-side {
+background: var(--player-bg);
+border-color: var(--player-border);
+}
+
+.banker-side {
+background: var(--banker-bg);
+border-color: var(--banker-border);
+}
+
+.title {
+font-size: 18px;
+font-weight: 700;
+margin-bottom: 10px;
+text-align: center;
+}
+
+.sub-title {
+display: block;
+font-size: 12px;
+color: var(--muted);
+font-weight: 600;
+margin-top: 3px;
+}
+
+.grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 8px;
+}
+
+.cell {
+height: 62px;
+border: 2px solid #d6dce8;
+border-radius: 14px;
+background: rgba(255,255,255,0.92);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 24px;
+font-weight: 700;
+cursor: pointer;
+user-select: none;
+}
+
+.cell.empty::after {
+font-size: 12px;
+font-weight: 600;
+color: #94a3b8;
+}
+
+.cell.p1.empty::after { content: 'P1'; }
+.cell.p2.empty::after { content: 'P2'; }
+.cell.p3.empty::after { content: 'P3'; }
+.cell.b1.empty::after { content: 'B1'; }
+.cell.b2.empty::after { content: 'B2'; }
+.cell.b3.empty::after { content: 'B3'; }
+
+.span2 { grid-column: 1 / span 2; }
+
+.active {
+background: var(--active);
+border-color: var(--active-border);
+box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.result-card,
+.buttons-wrap,
+.pro-card,
+.history-card {
+margin-top: 12px;
+background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+border: 1px solid var(--border);
+border-radius: 18px;
+padding: 12px;
+}
+
+.score-row,
+.history-head,
+.pro-head {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 10px;
+flex-wrap: wrap;
+}
+
+.score-main {
+display: flex;
+align-items: center;
+gap: 10px;
+flex-wrap: wrap;
+}
+
+.control-row {
+display: flex;
+align-items: center;
+gap: 8px;
+flex-wrap: wrap;
+}
+
+.round-wrap {
+display: flex;
+align-items: center;
+gap: 6px;
+padding: 6px 10px;
+border: 1px solid var(--soft-btn-border);
+background: #f8fafc;
+border-radius: 10px;
+}
+
+.round-label,
+.section-title,
+.detail-label,
+.mini-title {
+font-size: 12px;
+font-weight: 700;
+color: #64748b;
+}
+
+.round-input {
+width: 78px;
+border: 1px solid #cbd5e1;
+border-radius: 8px;
+padding: 6px 8px;
+font-size: 14px;
+}
+
+.score-badge {
+min-width: 92px;
+padding: 8px 12px;
+border-radius: 999px;
+font-size: 15px;
+font-weight: 700;
+text-align: center;
+background: #eef2ff;
+}
+
+.score-badge.player { color: var(--win-player); }
+.score-badge.banker { color: var(--win-banker); background: #fff1f2; }
+
+.winner-text {
+font-size: 24px;
+font-weight: 800;
+}
+
+.winner-player { color: var(--win-player); }
+.winner-banker { color: var(--win-banker); }
+.winner-tie { color: var(--win-tie); }
+
+.clear-btn-inline,
+.next-btn,
+.history-clear-btn {
+border: 1px solid var(--soft-btn-border);
+background: var(--soft-btn);
+color: #475569;
+border-radius: 10px;
+padding: 7px 10px;
+font-size: 13px;
+font-weight: 700;
+cursor: pointer;
+}
+
+.next-btn {
+background: #eff6ff;
+color: #1d4ed8;
+border-color: #bfdbfe;
+}
+
+.history-clear-btn {
+background: #fff1f2;
+color: #b91c1c;
+border-color: #fecdd3;
+}
+
+.detail-text {
+margin-top: 8px;
+font-size: 14px;
+line-height: 1.45;
+color: #334155;
+}
+
+.buttons {
+display: grid;
+grid-template-columns: repeat(7, minmax(0, 1fr));
+gap: 6px;
+width: 100%;
+}
+
+button.key {
+border: 1px solid #cfd8e3;
+background: #ffffff;
+border-radius: 12px;
+padding: 10px 4px;
+font-size: 15px;
+font-weight: 700;
+color: #111827;
+cursor: pointer;
+min-height: 46px;
+}
+
+.skip-key { background: #f3f4f6 !important; color: #4b5563 !important; }
+
+.pro-grid {
+display: grid;
+grid-template-columns: 1fr;
+gap: 10px;
+margin-top: 10px;
+}
+
+.predict-grid,
+.stats-grid,
+.insight-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 4px;
+}
+
+.predict-grid,
+.stats-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 4px;
+}
+
+.insight-grid {
+grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.predict-box,
+.stat-box,
+.insight-box {
+background: #f8fafc;
+border: 1px solid #d9e1ec;
+border-radius: 12px;
+padding: 6px 4px;
+min-height: 70px;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+text-align: center;
+}
+
+.predict-name,
+.stat-name,
+.insight-name {
+font-size: 10px;
+color: #64748b;
+font-weight: 700;
+margin-bottom: 4px;
+}
+
+.predict-pick,
+.stat-big,
+.insight-big {
+font-size: 14px;
+font-weight: 800;
+margin-bottom: 3px;
+line-height: 1.05;
+}
+
+.predict-meta,
+.stat-meta,
+.insight-meta {
+font-size: 9px;
+color: #5b6f8e;
+line-height: 1.1;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.pick-player { color: #2563eb; }
+.pick-banker { color: #dc2626; }
+.pick-tie { color: var(--win-tie); }
+.pick-pending { color: #64748b; }
+
+.history-list {
+margin-top: 10px;
+max-height: 340px;
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+
+.history-empty {
+color: var(--muted);
+font-size: 14px;
+padding: 8px 0;
+}
+
+.history-item {
+border: 1px solid var(--border);
+border-radius: 14px;
+padding: 10px;
+background: #fff;
+}
+
+.history-top {
+display: flex;
+justify-content: space-between;
+gap: 8px;
+align-items: flex-start;
+flex-wrap: wrap;
+}
+
+.history-main {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+gap: 12px;
+flex-wrap: wrap;
+flex: 1 1 auto;
+min-width: 0;
+}
+
+.history-cards {
+font-size: 13px;
+line-height: 1.45;
+min-width: 116px;
+}
+
+.history-smr {
+color: #94a3b8;
+font-size: 12px;
+line-height: 1.3;
+display: flex;
+gap: 8px;
+flex-wrap: wrap;
+flex: 1 1 auto;
+min-width: 0;
+}
+
+.history-smr > div {
+padding: 4px 8px;
+border: 1px solid #e2e8f0;
+border-radius: 10px;
+background: #f8fafc;
+}
+
+.history-result {
+font-size: 13px;
+font-weight: 800;
+border-radius: 999px;
+padding: 6px 10px;
+background: #f8fafc;
+flex: 0 0 auto;
+}
+
+.hit { color: #166534; background: #dcfce7; }
+.miss { color: #b91c1c; background: #fee2e2; }
+.draw { color: #c2410c; background: #ffedd5; }
+.status-hit { color: #166534; font-weight: 700; }
+.status-miss { color: #b91c1c; font-weight: 700; }
+.status-draw { color: #c2410c; font-weight: 700; }
+
+@media (max-width: 500px) {
+.predict-box, .stat-box, .insight-box {
+min-height: 60px;
+padding: 4px 2px;
+}
+.predict-name, .stat-name, .insight-name { font-size: 9px; }
+.predict-pick, .stat-big, .insight-big { font-size: 12px; }
+.predict-meta, .stat-meta, .insight-meta { font-size: 8px; }
+.insight-grid, .predict-grid, .stats-grid { gap: 3px; }
+}
+.top-box {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 6px;
+}
+.side { padding: 8px 6px; border-radius: 12px; }
+.title { font-size: 14px; margin-bottom: 6px; }
+.sub-title { font-size: 10px; }
+.grid { gap: 6px; }
+.cell { height: 46px; font-size: 17px; border-radius: 10px; }
+.cell.empty::after { font-size: 10px; }
+
+.result-card,
+.buttons-wrap,
+.pro-card,
+.history-card {
+margin-top: 10px;
+padding: 10px;
+border-radius: 14px;
+}
+.score-main { gap: 6px; }
+.winner-text { font-size: 16px; }
+.score-badge { min-width: 64px; font-size: 11px; padding: 5px 7px; }
+.detail-text { font-size: 11px; }
+.round-wrap { padding: 4px 6px; gap: 4px; border-radius: 8px; }
+.round-label,.section-title,.detail-label,.mini-title { font-size: 11px; }
+.round-input { width: 54px; font-size: 11px; padding: 4px 5px; }
+button.key { min-height: 36px; padding: 6px 2px; font-size: 11px; border-radius: 9px; }
+.clear-btn-inline,.next-btn,.history-clear-btn { padding: 5px 7px; font-size: 11px; border-radius: 8px; }
+
+.predict-grid, .stats-grid, .insight-grid { gap: 5px; }
+.predict-box, .stat-box, .insight-box {
+min-height: 78px;
+padding: 6px 3px;
+border-radius: 12px;
+}
+.predict-name, .stat-name, .insight-name { font-size: 9px; margin-bottom: 4px; }
+.predict-pick, .stat-big, .insight-big { font-size: 12px; margin-bottom: 4px; }
+.predict-meta, .stat-meta, .insight-meta { font-size: 7px; line-height: 1.08; }
+
+.history-list { margin-top: 8px; max-height: 280px; gap: 6px; }
+.history-item { padding: 8px; border-radius: 12px; }
+.history-main {
+width: 100%;
+gap: 6px;
+flex-direction: column;
+align-items: stretch;
+}
+.history-cards { font-size: 10px; line-height: 1.3; min-width: 0; }
+.history-smr {
+display: grid;
+grid-template-columns: repeat(4, minmax(0, 1fr));
+gap: 3px;
+font-size: 8px;
+line-height: 1.08;
+width: 100%;
+}
+.history-smr > div { min-width: 0; text-align: center; padding: 3px 2px; border-radius: 8px; }
+.history-result { align-self: flex-end; font-size: 10px; padding: 5px 7px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="panel">
+<div class="top-box">
+<div class="side player-side">
+<div class="title">PLAYER<span class="sub-title">閒家</span></div>
+<div class="grid">
+<div class="cell empty p1" data-index="0"></div>
+<div class="cell empty p2" data-index="1"></div>
+<div class="cell empty p3 span2" data-index="4"></div>
+</div>
+</div>
+<div class="side banker-side">
+<div class="title">BANKER<span class="sub-title">莊家</span></div>
+<div class="grid">
+<div class="cell empty b1" data-index="2"></div>
+<div class="cell empty b2" data-index="3"></div>
+<div class="cell empty b3 span2" data-index="5"></div>
+</div>
+</div>
+</div>
+
+<div class="result-card">
+<div class="score-row">
+<div class="score-main">
+<div class="score-badge player" id="playerScore">閒 0</div>
+<div class="score-badge banker" id="bankerScore">莊 0</div>
+<div class="winner-text winner-tie" id="winnerText">和局</div>
+</div>
+<div class="control-row">
+<div class="round-wrap">
+<span class="round-label">局數</span>
+<input class="round-input" id="roundInput" type="number" min="1" step="1" />
+</div>
+<button class="next-btn" type="button" id="nextBtn">下一局</button>
+<button class="clear-btn-inline" type="button" id="clearBoardBtn">清除本局</button>
+</div>
+</div>
+<div class="detail-text">
+<div class="detail-label">判斷資訊</div>
+<div id="detailText">請先輸入局數，再依序輸入牌面</div>
+</div>
+</div>
+
+<div class="buttons-wrap">
+<div class="section-title">牌面鍵</div>
+<div class="buttons" id="cardButtons">
+<button class="key" type="button" data-card="A">A</button>
+<button class="key" type="button" data-card="2">2</button>
+<button class="key" type="button" data-card="3">3</button>
+<button class="key" type="button" data-card="4">4</button>
+<button class="key" type="button" data-card="5">5</button>
+<button class="key" type="button" data-card="6">6</button>
+<button class="key" type="button" data-card="7">7</button>
+<button class="key" type="button" data-card="8">8</button>
+<button class="key" type="button" data-card="9">9</button>
+<button class="key" type="button" data-card="10">10</button>
+<button class="key" type="button" data-card="J">J</button>
+<button class="key" type="button" data-card="Q">Q</button>
+<button class="key" type="button" data-card="K">K</button>
+<button class="key skip-key" type="button" id="skipBtn">不補</button>
+</div>
+</div>
+
+<div class="pro-card">
+<div class="pro-head">
+<div>
+<div class="section-title">專業版分析（極限版）</div>
+<div style="font-size:12px;color:#64748b;">超精簡三行顯示</div>
+</div>
+</div>
+<div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+
+<!-- 四套預測（1行） -->
+<div id="linePredict" style="font-size:14px;font-weight:700;">S:- M:- T:- R:-</div>
+
+<!-- 勝率（1行） -->
+<div id="lineStats" style="font-size:13px;color:#334155;">S0 M0 T0 R0</div>
+
+<!-- 進階（1行） -->
+<div id="lineInsight" style="font-size:13px;font-weight:700;">共識0/4｜觀望｜0U｜-｜正常</div>
+
+</div>
+</div>
+
+<div class="history-card">
+<div class="history-head">
+<div>
+<div class="section-title">歷史紀錄</div>
+<div style="font-size:13px;color:#475569;">最新在最上，可下拉查看</div>
+</div>
+<button class="history-clear-btn" type="button" id="clearHistoryBtn">清除歷史</button>
+</div>
+<div class="history-list" id="historyList"></div>
+</div>
+</div>
+</div>
+
+<script>
+(() => {
+const STORAGE_KEY = 'baccarat_pro_compact_v1';
+let values = ['', '', '', '', '', ''];
+const order = [0, 1, 2, 3, 4, 5];
+let currentStep = 0;
+let selectedIndex = null;
+let historyData = [];
+let pendingPrediction = null;
+
+const cells = Array.from(document.querySelectorAll('.cell'));
+const roundInputEl = document.getElementById('roundInput');
+const cardButtonsEl = document.getElementById('cardButtons');
+const nextBtn = document.getElementById('nextBtn');
+const clearBoardBtn = document.getElementById('clearBoardBtn');
+const skipBtn = document.getElementById('skipBtn');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+const playerScoreEl = document.getElementById('playerScore');
+const bankerScoreEl = document.getElementById('bankerScore');
+const winnerTextEl = document.getElementById('winnerText');
+const detailTextEl = document.getElementById('detailText');
+
+const sPickEl = document.getElementById('sPick');
+const mPickEl = document.getElementById('mPick');
+const tPickEl = document.getElementById('tPick');
+const rPickEl = document.getElementById('rPick');
+const sMetaEl = document.getElementById('sMeta');
+const mMetaEl = document.getElementById('mMeta');
+const tMetaEl = document.getElementById('tMeta');
+const rMetaEl = document.getElementById('rMeta');
+
+const sRateEl = document.getElementById('sRate');
+const mRateEl = document.getElementById('mRate');
+const tRateEl = document.getElementById('tRate');
+const rRateEl = document.getElementById('rRate');
+const sStatEl = document.getElementById('sStat');
+const mStatEl = document.getElementById('mStat');
+const tStatEl = document.getElementById('tStat');
+const rStatEl = document.getElementById('rStat');
+
+const consensusPickEl = document.getElementById('consensusPick');
+const consensusMetaEl = document.getElementById('consensusMeta');
+const disciplinePickEl = document.getElementById('disciplinePick');
+const disciplineMetaEl = document.getElementById('disciplineMeta');
+const rankTopEl = document.getElementById('rankTop');
+const rankMetaEl = document.getElementById('rankMeta');
+const warnPickEl = document.getElementById('warnPick');
+const warnMetaEl = document.getElementById('warnMeta');
+
+const historyListEl = document.getElementById('historyList');
+
+function saveToStorage() {
+localStorage.setItem(STORAGE_KEY, JSON.stringify({
+values,
+currentStep,
+selectedIndex,
+historyData,
+pendingPrediction,
+roundInput: roundInputEl.value || ''
+}));
+}
+
+function loadFromStorage() {
+try {
+const raw = localStorage.getItem(STORAGE_KEY);
+if (!raw) return;
+const data = JSON.parse(raw);
+values = Array.isArray(data.values) && data.values.length === 6 ? data.values : ['', '', '', '', '', ''];
+currentStep = Number.isInteger(data.currentStep) ? data.currentStep : 0;
+selectedIndex = Number.isInteger(data.selectedIndex) ? data.selectedIndex : null;
+historyData = Array.isArray(data.historyData) ? data.historyData : [];
+pendingPrediction = data.pendingPrediction || null;
+roundInputEl.value = data.roundInput || '';
+} catch (e) {
+console.error(e);
+}
+}
+
+function getRoundNumber() {
+const n = parseInt(roundInputEl.value, 10);
+return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function getDecksByRound(roundNo) {
+if (roundNo === null) return null;
+if (roundNo <= 10) return 8;
+if (roundNo <= 20) return 7;
+if (roundNo <= 30) return 6;
+if (roundNo <= 40) return 5;
+if (roundNo <= 50) return 4;
+return 3;
+}
+
+function getValue(card) {
+if (!card) return 0;
+if (card === 'A') return 1;
+if (['10', 'J', 'Q', 'K'].includes(card)) return 0;
+return parseInt(card, 10) || 0;
+}
+
+function getTrueCountWeight(card) {
+if (!card) return 0;
+if (['A', '2', '7', '8', '9'].includes(card)) return 1;
+if (['3', '4', '5', '6'].includes(card)) return -1;
+return 0;
+}
+
+function getCards(arr) { return arr.filter(Boolean); }
+function isNatural(p2, b2) { return p2 >= 8 || b2 >= 8; }
+function shouldPlayerDraw(p2) { return p2 <= 5; }
+
+function shouldBankerDraw(b2, playerThird, playerDrew) {
+if (!playerDrew) return b2 <= 5;
+const pt = getValue(playerThird);
+if (b2 <= 2) return true;
+if (b2 === 3) return pt !== 8;
+if (b2 === 4) return pt >= 2 && pt <= 7;
+if (b2 === 5) return pt >= 4 && pt <= 7;
+if (b2 === 6) return pt === 6 || pt === 7;
+return false;
+}
+
+function getActualResultLabel(playerTotal, bankerTotal) {
+if (playerTotal > bankerTotal) return '閒';
+if (bankerTotal > playerTotal) return '莊';
+return '和';
+}
+
+function getWinnerTextClass(result) {
+if (result === '閒贏') return 'winner-player';
+if (result === '莊贏') return 'winner-banker';
+return 'winner-tie';
+}
+
+function getPickClass(pick) {
+if (pick === '閒') return 'pick-player';
+if (pick === '莊') return 'pick-banker';
+if (pick === '和' || pick === '觀望') return 'pick-tie';
+return 'pick-pending';
+}
+
+function getHistoryStatus(prediction, actual) {
+if (actual === '和') return '-';
+if (prediction !== '閒' && prediction !== '莊') return '-';
+return prediction === actual ? '準' : '失敗';
+}
+
+function evaluateS(allCards) {
+if (allCards.length === 0) return { pick: '待輸入', meta: '分數：-' };
+let score = 0;
+allCards.forEach((card) => {
+if (card === '8') score += 4;
+else if (card === '9' || card === 'A') score += 3;
+else if (card === '2' || card === '3') score += 2;
+else if (card === '4' || card === '5') score += 1;
+});
+return { pick: score > 5 ? '閒' : '莊', meta: `分數：${score}` };
+}
+
+function evaluateM(playerCards, bankerCards, allCards) {
+if (playerCards.length < 2 || bankerCards.length < 2) {
+return { pick: '待輸入', meta: '點差：-
+公牌奇偶：-' };
+}
+const playerTotalRaw = playerCards.reduce((s, c) => s + getValue(c), 0);
+const bankerTotalRaw = bankerCards.reduce((s, c) => s + getValue(c), 0);
+const diff = playerTotalRaw - bankerTotalRaw;
+const sign1 = diff >= 0 ? '正' : '負';
+const publicCount = allCards.filter((c) => ['10', 'J', 'Q', 'K'].includes(c)).length;
+const sign2 = publicCount % 2 === 0 ? '正' : '負';
+const finalSign = sign1 === sign2 ? '正' : '負';
+return {
+pick: finalSign === '正' ? '閒' : '莊',
+meta: `點差：${diff}
+公牌奇偶：${publicCount % 2 === 0 ? '正' : '負'}`
+};
+}
+
+function evaluateR(playerCards, bankerCards, allCards) {
+if (playerCards.length < 2 || bankerCards.length < 2) {
+return { pick: '待輸入', meta: '尾數：-
+翻邊：-' };
+}
+const playerRaw = playerCards.reduce((s, c) => s + getValue(c), 0);
+const bankerRaw = bankerCards.reduce((s, c) => s + getValue(c), 0);
+const tail = (playerRaw % 10) + (bankerRaw % 10);
+const publicCount = allCards.filter((c) => ['10', 'J', 'Q', 'K'].includes(c)).length;
+const flip = allCards.length === 5 || allCards.length === 6 || (allCards.length === 4 && publicCount === 0);
+let pick = tail === 19 ? '閒' : '莊';
+if (flip) pick = pick === '閒' ? '莊' : '閒';
+return { pick, meta: `尾數：${tail}
+翻邊：${flip ? '是' : '否'}` };
+}
+
+function evaluateTrueCount(allCards, roundNo) {
+if (allCards.length === 0) {
+return { pick: '待輸入', meta: '真數：-
+建議：-', trueCount: 0, advice: '-' };
+}
+const decks = getDecksByRound(roundNo);
+if (!decks) {
+return { pick: '待輸入', meta: '真數：-
+建議：請輸入局數', trueCount: 0, advice: '請輸入局數' };
+}
+const total = allCards.reduce((sum, card) => sum + getTrueCountWeight(card), 0);
+const trueCount = total / decks;
+let pick = '觀望';
+if (trueCount > 0) pick = '閒';
+else if (trueCount < 0) pick = '莊';
+
+const absTC = Math.abs(trueCount);
+let advice = '觀望';
+if (absTC > 0.6) advice = '下大注';
+else if (absTC > 0.5) advice = '小下注';
+else if (absTC >= 0.35 && absTC <= 0.5) advice = '看一把';
+else if (absTC < 0.25) advice = '下大注';
+else advice = '小下注';
+if (pick === '觀望') advice = '觀望';
+
+return {
+pick,
+meta: `真數：${trueCount.toFixed(2)}
+建議：${advice}`,
+trueCount,
+advice
+};
+}
+
+function getRoundState() {
+const playerCards = getCards([values[0], values[1], values[4]]);
+const bankerCards = getCards([values[2], values[3], values[5]]);
+const allCards = [...playerCards, ...bankerCards];
+const roundNo = getRoundNumber();
+const p2 = (getValue(values[0]) + getValue(values[1])) % 10;
+const b2 = (getValue(values[2]) + getValue(values[3])) % 10;
+const playerThird = values[4] || null;
+const bankerThird = values[5] || null;
+
+let info = roundNo ? '請依序輸入牌面' : '請先輸入局數';
+if (roundNo && values[0] && values[1] && values[2] && values[3]) {
+if (isNatural(p2, b2)) {
+info = '天牌（不補）';
+} else {
+info = '';
+if (playerThird === null) info += shouldPlayerDraw(p2) ? '閒應補牌 ' : '閒不補 ';
+if (bankerThird === null) {
+if (playerThird === null && shouldPlayerDraw(p2)) {
+info += '莊待閒第三張後判定';
+} else {
+info += shouldBankerDraw(b2, playerThird, playerThird !== null) ? '莊應補牌' : '莊不補';
+}
+}
+if (!info.trim()) info = '本局已輸入完成';
+}
+}
+
+const playerTotal = playerCards.reduce((s, c) => s + getValue(c), 0) % 10;
+const bankerTotal = bankerCards.reduce((s, c) => s + getValue(c), 0) % 10;
+
+return {
+playerCards,
+bankerCards,
+allCards,
+playerTotal,
+bankerTotal,
+actual: getActualResultLabel(playerTotal, bankerTotal),
+info,
+roundNo,
+s: evaluateS(allCards),
+m: evaluateM(playerCards, bankerCards, allCards),
+t: evaluateTrueCount(allCards, roundNo),
+r: evaluateR(playerCards, bankerCards, allCards)
+};
+}
+
+function renderPredict(state) {
+const txt = `S:${state.s.pick} M:${state.m.pick} T:${state.t.pick} R:${state.r.pick}`;
+document.getElementById('linePredict').textContent = txt;
+}`;
+mPickEl.className = `predict-pick ${getPickClass(state.m.pick)}`;
+tPickEl.className = `predict-pick ${getPickClass(state.t.pick)}`;
+rPickEl.className = `predict-pick ${getPickClass(state.r.pick)}`;
+
+sMetaEl.textContent = state.s.meta;
+mMetaEl.innerHTML = String(state.m.meta).replace(/
+/g, '<br>');
+tMetaEl.innerHTML = String(state.t.meta).replace(/
+/g, '<br>');
+rMetaEl.innerHTML = String(state.r.meta).replace(/
+/g, '<br>');
+}
+
+function calcRate(key) {
+const valid = historyData.filter((item) => item.actual !== '和' && item[`${key}Status`] !== '-');
+const hit = valid.filter((item) => item[`${key}Status`] === '準').length;
+const total = valid.length;
+return { hit, total, rate: total === 0 ? 0 : Math.round((hit / total) * 100) };
+}
+
+function renderStats() {
+const s = calcRate('s');
+const m = calcRate('m');
+const t = calcRate('t');
+const r = calcRate('r');
+
+document.getElementById('lineStats').textContent = `S${s.rate} M${m.rate} T${t.rate} R${r.rate}`;
+
+return { s, m, t, r };
+}
+
+function renderInsights(state, rates) {
+const picks = [state.s.pick, state.m.pick, state.t.pick, state.r.pick];
+const player = picks.filter(p=>p==='閒').length;
+const banker = picks.filter(p=>p==='莊').length;
+const consensus = Math.max(player, banker);
+const side = player>banker?'閒':banker>player?'莊':'觀望';
+
+let units = 0;
+if (consensus===4) units=3;
+else if (consensus===3) units=2;
+else if (consensus===2) units=1;
+
+const finalPick = units===0?'觀望':side;
+
+const rankList = [
+['S', rates.s.rate],
+['M', rates.m.rate],
+['T', rates.t.rate],
+['R', rates.r.rate]
+].sort((a,b)=>b[1]-a[1]);
+
+let warn = '正常';
+if (consensus<=1) warn='⚠';
+
+document.getElementById('lineInsight').textContent =
+`共識${consensus}/4｜${finalPick}｜${units}U｜${rankList[0][0]}｜${warn}`;
+}/4`;
+consensusPickEl.className = `insight-big ${getPickClass(side)}`;
+consensusMetaEl.innerHTML = `${bars}<br>方向：${side}`;
+
+const entries = [
+{ label: 'S', pick: state.s.pick, rate: rates.s.total ? rates.s.rate : 50 },
+{ label: 'M', pick: state.m.pick, rate: rates.m.total ? rates.m.rate : 50 },
+{ label: '真數', pick: state.t.pick, rate: rates.t.total ? rates.t.rate : 50 },
+{ label: 'R', pick: state.r.pick, rate: rates.r.total ? rates.r.rate : 50 }
+].filter((x) => x.pick === '閒' || x.pick === '莊');
+
+let playerWeight = 0;
+let bankerWeight = 0;
+let bestLabel = '-';
+let bestRate = -1;
+entries.forEach((item) => {
+if (item.pick === '閒') playerWeight += item.rate;
+else bankerWeight += item.rate;
+if (item.rate > bestRate) {
+bestRate = item.rate;
+bestLabel = item.label;
+}
+});
+
+let units = 0;
+if (consensusCount === 4) units = 3;
+else if (consensusCount === 3) units = 2;
+else if (consensusCount === 2 && Math.abs(playerWeight - bankerWeight) >= 15) units = 1;
+
+let finalPick = '觀望';
+if (units > 0) finalPick = playerWeight >= bankerWeight ? '閒' : '莊';
+
+disciplinePickEl.textContent = units === 0 ? '觀望' : `${finalPick}｜${units}單位`;
+disciplinePickEl.className = `insight-big ${getPickClass(finalPick)}`;
+disciplineMetaEl.innerHTML = `主推：${finalPick}<br>下注：${units}單位`;
+
+const rankList = [
+['S', rates.s.rate],
+['M', rates.m.rate],
+['真數', rates.t.rate],
+['R', rates.r.rate]
+].sort((a, b) => b[1] - a[1]);
+
+rankTopEl.textContent = `${rankList[0][0]} 最強`;
+rankTopEl.className = 'insight-big pick-tie';
+rankMetaEl.innerHTML = `S:${rates.s.rate}% M:${rates.m.rate}%<br>真數:${rates.t.rate}% R:${rates.r.rate}%`;
+
+let warn = '正常';
+let warnMsg = '無';
+if (consensusCount <= 1) {
+warn = '⚠混亂';
+warnMsg = '四套分歧';
+}
+
+const recent = historyData.slice(0, 3);
+if (recent.length === 3) {
+const noHitCount = recent.filter((item) => {
+return !['sStatus', 'mStatus', 'tStatus', 'rStatus'].some((k) => item[k] === '準');
+}).length;
+if (noHitCount >= 2) {
+warn = '⚠失準';
+warnMsg = '建議停1-2局';
+}
+}
+
+warnPickEl.textContent = warn;
+warnPickEl.className = `insight-big ${warn === '正常' ? 'pick-tie' : 'pick-banker'}`;
+warnMetaEl.textContent = warnMsg;
+}
+
+function calc() {
+const state = getRoundState();
+
+playerScoreEl.textContent = `閒 ${state.playerTotal}`;
+bankerScoreEl.textContent = `莊 ${state.bankerTotal}`;
+
+const winnerText = state.actual === '閒' ? '閒贏' : state.actual === '莊' ? '莊贏' : '和局';
+winnerTextEl.textContent = winnerText;
+winnerTextEl.className = `winner-text ${getWinnerTextClass(winnerText)}`;
+
+detailTextEl.textContent = state.info;
+renderPredict(state);
+const rates = renderStats();
+renderInsights(state, rates);
+}
+
+function highlight() {
+cells.forEach((c) => c.classList.remove('active'));
+if (selectedIndex !== null) {
+const target = document.querySelector(`[data-index='${selectedIndex}']`);
+if (target) target.classList.add('active');
+}
+}
+
+function renderHistory() {
+if (historyData.length === 0) {
+historyListEl.innerHTML = '<div class="history-empty">目前還沒有歷史紀錄</div>';
+return;
+}
+
+historyListEl.innerHTML = historyData.map((item) => {
+const sCls = item.sStatus === '準' ? 'status-hit' : item.sStatus === '失敗' ? 'status-miss' : 'status-draw';
+const mCls = item.mStatus === '準' ? 'status-hit' : item.mStatus === '失敗' ? 'status-miss' : 'status-draw';
+const tCls = item.tStatus === '準' ? 'status-hit' : item.tStatus === '失敗' ? 'status-miss' : 'status-draw';
+const rCls = item.rStatus === '準' ? 'status-hit' : item.rStatus === '失敗' ? 'status-miss' : 'status-draw';
+
+return `
+<div class="history-item">
+<div class="history-top">
+<div class="history-main">
+<div class="history-cards">
+<div><strong>閒牌面：</strong>${item.player || '-'}</div>
+<div><strong>莊牌面：</strong>${item.banker || '-'}</div>
+</div>
+<div class="history-smr">
+<div><strong>S：</strong>${item.sPick}（<span class="${sCls}">${item.sStatus}</span>）</div>
+<div><strong>M：</strong>${item.mPick}（<span class="${mCls}">${item.mStatus}</span>）</div>
+<div><strong>真數：</strong>${item.tPick}（<span class="${tCls}">${item.tStatus}</span>）</div>
+<div><strong>R：</strong>${item.rPick}（<span class="${rCls}">${item.rStatus}</span>）</div>
+</div>
+</div>
+<div class="history-result ${item.actual === '和' ? 'draw' : item.actual === '閒' ? 'hit' : 'miss'}">實際：${item.actual}</div>
+</div>
+</div>`;
+}).join('');
+}
+
+function render() {
+cells.forEach((cell) => {
+const idx = parseInt(cell.dataset.index, 10);
+const val = values[idx];
+cell.textContent = val;
+if (val) cell.classList.remove('empty');
+else cell.classList.add('empty');
+});
+
+highlight();
+calc();
+saveToStorage();
+}
+
+function inputCard(card) {
+if (selectedIndex !== null) {
+values[selectedIndex] = card;
+selectedIndex = null;
+} else if (currentStep < 6) {
+values[order[currentStep]] = card;
+currentStep += 1;
+}
+render();
+}
+
+function skip() {
+if (selectedIndex !== null) {
+values[selectedIndex] = '';
+selectedIndex = null;
+render();
+return;
+}
+if (currentStep < 6) {
+currentStep += 1;
+render();
+}
+}
+
+function saveRoundAndNext() {
+const state = getRoundState();
+const roundNo = getRoundNumber();
+
+if (!roundNo) {
+alert('請先輸入局數。');
+roundInputEl.focus();
+return;
+}
+if (state.playerCards.length < 2 || state.bankerCards.length < 2) {
+alert('請至少先輸入閒家與莊家的前兩張牌。');
+return;
+}
+
+if (pendingPrediction) {
+const snapshot = {
+player: [...state.playerCards].join(' '),
+banker: [...state.bankerCards].join(' '),
+actual: state.actual,
+sPick: pendingPrediction.sPick,
+mPick: pendingPrediction.mPick,
+tPick: pendingPrediction.tPick,
+rPick: pendingPrediction.rPick,
+sStatus: getHistoryStatus(pendingPrediction.sPick, state.actual),
+mStatus: getHistoryStatus(pendingPrediction.mPick, state.actual),
+tStatus: getHistoryStatus(pendingPrediction.tPick, state.actual),
+rStatus: getHistoryStatus(pendingPrediction.rPick, state.actual)
+};
+historyData.unshift(snapshot);
+renderHistory();
+}
+
+pendingPrediction = {
+sPick: String(state.s.pick),
+mPick: String(state.m.pick),
+tPick: String(state.t.pick),
+rPick: String(state.r.pick),
+sMeta: state.s.meta,
+mMeta: state.m.meta,
+tMeta: state.t.meta,
+rMeta: state.r.meta
+};
+
+roundInputEl.value = String(roundNo + 1);
+values = ['', '', '', '', '', ''];
+currentStep = 0;
+selectedIndex = null;
+
+cells.forEach((cell) => {
+cell.textContent = '';
+cell.classList.add('empty');
+});
+
+highlight();
+
+playerScoreEl.textContent = '閒 0';
+bankerScoreEl.textContent = '莊 0';
+winnerTextEl.textContent = '和局';
+winnerTextEl.className = 'winner-text winner-tie';
+detailTextEl.textContent = '請依序輸入牌面';
+
+sPickEl.textContent = pendingPrediction.sPick;
+mPickEl.textContent = pendingPrediction.mPick;
+tPickEl.textContent = pendingPrediction.tPick;
+rPickEl.textContent = pendingPrediction.rPick;
+
+sPickEl.className = `predict-pick ${getPickClass(pendingPrediction.sPick)}`;
+mPickEl.className = `predict-pick ${getPickClass(pendingPrediction.mPick)}`;
+tPickEl.className = `predict-pick ${getPickClass(pendingPrediction.tPick)}`;
+rPickEl.className = `predict-pick ${getPickClass(pendingPrediction.rPick)}`;
+
+sMetaEl.textContent = pendingPrediction.sMeta;
+mMetaEl.innerHTML = String(pendingPrediction.mMeta).replace(/
+/g, '<br>');
+tMetaEl.innerHTML = String(pendingPrediction.tMeta).replace(/
+/g, '<br>');
+rMetaEl.innerHTML = String(pendingPrediction.rMeta).replace(/
+/g, '<br>');
+
+saveToStorage();
+calc();
+}
+
+function clearHistory() {
+historyData = [];
+pendingPrediction = null;
+renderHistory();
+saveToStorage();
+calc();
+}
+
+function clearBoard() {
+values = ['', '', '', '', '', ''];
+currentStep = 0;
+selectedIndex = null;
+render();
+}
+
+cells.forEach((cell) => {
+cell.addEventListener('click', () => {
+selectedIndex = parseInt(cell.dataset.index, 10);
+highlight();
+saveToStorage();
+});
+});
+
+roundInputEl.addEventListener('input', () => {
+calc();
+saveToStorage();
+});
+
+cardButtonsEl.addEventListener('click', (e) => {
+const btn = e.target.closest('[data-card]');
+if (!btn) return;
+inputCard(btn.dataset.card);
+});
+
+skipBtn.addEventListener('click', skip);
+nextBtn.addEventListener('click', saveRoundAndNext);
+clearBoardBtn.addEventListener('click', clearBoard);
+clearHistoryBtn.addEventListener('click', clearHistory);
+
+loadFromStorage();
+render();
+renderHistory();
+
+if (pendingPrediction) {
+sPickEl.textContent = pendingPrediction.sPick;
+mPickEl.textContent = pendingPrediction.mPick;
+tPickEl.textContent = pendingPrediction.tPick;
+rPickEl.textContent = pendingPrediction.rPick;
+
+sPickEl.className = `predict-pick ${getPickClass(pendingPrediction.sPick)}`;
+mPickEl.className = `predict-pick ${getPickClass(pendingPrediction.mPick)}`;
+tPickEl.className = `predict-pick ${getPickClass(pendingPrediction.tPick)}`;
+rPickEl.className = `predict-pick ${getPickClass(pendingPrediction.rPick)}`;
+
+sMetaEl.textContent = pendingPrediction.sMeta;
+mMetaEl.innerHTML = String(pendingPrediction.mMeta).replace(/
+/g, '<br>');
+tMetaEl.innerHTML = String(pendingPrediction.tMeta).replace(/
+/g, '<br>');
+rMetaEl.innerHTML = String(pendingPrediction.rMeta).replace(/
+/g, '<br>');
+}
+})();
+</script>
+</body>
+</html>
